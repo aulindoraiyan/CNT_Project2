@@ -266,11 +266,19 @@ def extract_final_ips(parsed_data, domain):
     Check the Answers section for A records
     that match the queried domain.
     """
-    # TODO: Person 4
-    # 1. Parse answer section
-    # 2. Find TYPE_A records
-    # 3. Return list of IPs
+    if parsed_data is None:
+        return []
+    
     final_ips = []
+
+    answers = parsed_data.get("answers", [])
+
+    for record in answers:
+        if record.get("type") == TYPE_A:
+            ip = record.get("rdata")
+            if ip:
+                final_ips.append(ip)
+
     return final_ips
 
 
