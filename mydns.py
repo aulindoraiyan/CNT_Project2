@@ -272,12 +272,17 @@ def extract_final_ips(parsed_data, domain):
     final_ips = []
 
     answers = parsed_data.get("answers", [])
+    # Raiyan's fix: I noticed the previous version returned all A records, even unrelated ones.
+    # I fixed it by checking that the record name matches the queried domain,
+    # so only the correct IP(s) are returned.
 
     for record in answers:
         if record.get("type") == TYPE_A:
-            ip = record.get("rdata")
-            if ip:
-                final_ips.append(ip)
+            name = record.get("name", "").strip(".").lower()
+            if name == domain.strip(".").lower():
+                ip = record.get("rdata")
+                if ip:
+                    final_ips.append(ip)
 
     return final_ips
 
