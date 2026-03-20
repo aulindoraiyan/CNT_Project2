@@ -109,11 +109,38 @@ def build_dns_query(domain):
     - DNS header
     - Question section
     """
-    # TODO: Person 1
-    # 1. Create DNS header using struct.pack
-    # 2. Encode domain name into DNS format
-    # 3. Add QTYPE and QCLASS
-    query_packet = b''
+    # Random transaction ID
+    transaction_id = random.randint(0, 65535)
+
+    # Flags = 0 for standard query with recursion not desired
+    flags = 0
+
+    # One question, no answers/authority/additional in query
+    qdcount = 1
+    ancount = 0
+    nscount = 0
+    arcount = 0
+
+    # Build DNS header
+    header = struct.pack("!HHHHHH",
+                         transaction_id,
+                         flags,
+                         qdcount,
+                         ancount,
+                         nscount,
+                         arcount)
+
+    # Encode domain name into DNS format
+    qname = b""
+    for part in domain.strip(".").split("."):
+        qname += struct.pack("!B", len(part))
+        qname += part.encode("ascii")
+    qname += b"\x00"
+
+    # QTYPE = A, QCLASS = IN
+    question = qname + struct.pack("!HH", TYPE_A, CLASS_IN)
+
+    query_packet = header + question
     return query_packet
 
 
@@ -121,11 +148,11 @@ def send_query(server_ip, domain):
     """
     Send DNS query using UDP socket.
     """
-    # TODO: Person 1
-    # 1. Create UDP socket
-    # 2. Call build_dns_query()
-    # 3. Send packet to server_ip on port 53
-    sock = None
+    query_packet = build_dns_query(domain)
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    sock.sendto(query_packet, (server_ip, DNS_PORT))
+
     return sock
 
 
