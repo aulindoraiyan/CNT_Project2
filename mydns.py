@@ -109,17 +109,22 @@ def build_dns_query(domain):
     - DNS header
     - Question section
     """
-    # Random transaction ID
+    #DNS Server expects a specific format for the query packet, which includes a header and a question section. 
+    #The header contains fields like transaction ID, flags, and counts of questions and answers.
+
+
+    # Random transaction ID- 16 bit number
+
     transaction_id = random.randint(0, 65535)
 
     # Flags = 0 for standard query with recursion not desired
     flags = 0
 
     # One question, no answers/authority/additional in query
-    qdcount = 1
-    ancount = 0
-    nscount = 0
-    arcount = 0
+    qdcount = 1 #number of questions in the query
+    ancount = 0 #number of answers in the query, since we are only asking a question, there are no answers yet
+    nscount = 0 #number of authority count in the query, it is used in responses, and not queries
+    arcount = 0 #number of additional count in the query, used in responses, and not queries
 
     # Build DNS header
     header = struct.pack("!HHHHHH",
@@ -129,15 +134,24 @@ def build_dns_query(domain):
                          ancount,
                          nscount,
                          arcount)
+    
+    #The DNS Header is built. Now, we will focus on the Question part
+
+    #The question itself has 3 parts: 
+        #QNAME : The domain name in DNS format
+        #QType: the record that is requested
+        #QClass: the network class
 
     # Encode domain name into DNS format
-    qname = b""
-    for part in domain.strip(".").split("."):
-        qname += struct.pack("!B", len(part))
-        qname += part.encode("ascii")
-    qname += b"\x00"
+    qname = b"" #Creating an empty byte string. 
+    for part in domain.strip(".").split("."):  #surgery on domain, which is  cs.fiu.edu
+        qname += struct.pack("!B", len(part)) #add the length of each label
+        qname += part.encode("ascii") #add the actual label text
+    qname += b"\x00" #This marks the end of the domain name.
 
-    # QTYPE = A, QCLASS = IN
+    # Adding the QTYPE = A and QCLASS = IN to the question section.
+    # Type A means we are asking for an IPv4 address
+    # Class IN means we are asking for internet-related information.
     question = qname + struct.pack("!HH", TYPE_A, CLASS_IN)
 
     query_packet = header + question
@@ -150,8 +164,10 @@ def send_query(server_ip, domain):
     """
     query_packet = build_dns_query(domain)
 
-    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    sock.sendto(query_packet, (server_ip, DNS_PORT))
+    # Calls the previous function for the message to be sent. 
+
+    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM) #Creates the connection
+    sock.sendto(query_packet, (server_ip, DNS_PORT)) # Send the packet
 
     return sock
 
