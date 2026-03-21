@@ -293,8 +293,23 @@ def extract_next_dns_ip(parsed_data):
     # 1. Iterate through additional records
     # 2. Identify TYPE_A records
     # 3. Return the IP address
+
+    if parsed_data is None:
+        return None
+    # returns None if there is no parsed data, which means there was an error in the response
+
+    additional = parsed_data.get("additional", [])
+    # iterates through the additional records to find an A record, which contains the IP address of the next DNS server.
+
+    for record in additional:
+        if record.get("type") == TYPE_A:
+            # finds a record of type A, which means it contains an IP address.
+            return record.get("rdata")
+    # loops through the additional records, and if it finds a record of type A, it returns the rdata, which is the IP address of the next DNS server.    
+
     next_ip = None
     return next_ip
+    # returns None if no A record is found in the additional section, which means we don't have the IP address of the next DNS server to query.
 
 
 # ------------------------------------------------------------------
